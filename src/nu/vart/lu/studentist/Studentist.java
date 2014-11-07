@@ -26,6 +26,16 @@ public class Studentist {
         return course;
     }
 
+    public Studied completeCourse(Studies studies, String grade) {
+        Studied studied = new Studied(studies.getStudent(), studies.getCourse(), grade);
+        if (!database.addStudied(studied))
+            return null; // TODO throw some error
+
+        if (!database.remove(studies))
+            return null; // TODO throw some error
+        return studied;
+    }
+
     public Student getStudent(String id) {
         return database.getStudent(id);
     }
@@ -48,5 +58,9 @@ public class Studentist {
 
     public Studies[] getStudies(Student student) {
         return database.getStudies(student);
+    }
+
+    public boolean remove(Studied studied) {
+        return database.remove(studied);
     }
 }

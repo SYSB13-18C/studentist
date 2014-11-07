@@ -6,6 +6,8 @@ import nu.vart.lu.studentist.models.Studies;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class Student extends Page {
     protected nu.vart.lu.studentist.models.Student student;
@@ -41,9 +43,26 @@ public class Student extends Page {
             protected Studied studied;
 
             public Record(Studied studied) {
+                super(new GridLayout(1, 0));
                 this.studied = studied;
-                add(new JLabel(studied.getCourse().getCode() + " " + studied.getCourse().getName() + " " + studied.getCourse().getPoints() + " " + studied.getGrade()));
+                add(new JLabel(studied.getCourse().getCode()));
+                add(new JLabel(studied.getCourse().getName()));
+                add(new JLabel("" + studied.getCourse().getPoints()));
+                add(new JLabel(studied.getGrade()));
+                add(new Remove());
+            }
 
+            protected class Remove extends JButton implements ActionListener {
+                public Remove() {
+                    super("X");
+                    addActionListener(this);
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    studentist.remove(studied);
+                    gui.setComponent(new Student(gui, student));
+                }
             }
         }
     }
@@ -57,12 +76,37 @@ public class Student extends Page {
         }
 
         protected class Record extends JPanel {
-            protected Studied studied;
+            protected Studies studies;
+            protected Grader grader;
+            protected String[] grades = { "I", "A", "B", "C", "D", "E", "U" };
 
             public Record(Studies studies) {
-                super(new GridLayout());
-                this.studied = studied;
-                add(new JLabel(studies.getCourse().getCode() + " " + studies.getCourse().getName() + " " + studies.getCourse().getPoints()));
+                super(new GridLayout(1, 0));
+                this.studies = studies;
+                add(new JLabel(studies.getCourse().getCode()));
+                add(new JLabel(studies.getCourse().getName()));
+                add(new JLabel("" + studies.getCourse().getPoints()));
+                grader = new Grader();
+                add(new Grader());
+            }
+
+            protected class Grader extends JComboBox<String> implements ActionListener {
+                public Grader() {
+                    super(grades);
+                    addActionListener(this);
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("action perf00rmed");
+                    System.out.println(e.getSource());
+                    System.out.println(getSelectedItem());
+                    String grade = (String)getSelectedItem();
+                    if (grade != "I") {
+                        studentist.completeCourse(studies, grade);
+                        gui.setComponent(new Student(gui, student));
+                    }
+                }
             }
         }
     }

@@ -80,13 +80,13 @@ public class Database {
         return false;
     }
 
-    public boolean addStudied(String code, String id, String grade){
+    public boolean addStudied(Studied studied) {
         try {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO Studied(code, id, grade) VALUES (?, ?, ?)");
-            statement.setString(1, code);
-            statement.setString(2, id);
-            statement.setString(3, grade);
-            statement.executeQuery();
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO Studied (student, course, grade) VALUES (?, ?, ?)");
+            statement.setString(1, studied.getStudent().getId());
+            statement.setString(2, studied.getCourse().getCode());
+            statement.setString(3, studied.getGrade());
+            statement.executeUpdate();
             System.out.println("Student tillagd till studied");
             return true;
         }
@@ -374,6 +374,34 @@ public class Database {
 
         Studies[] studies = new Studies[buffer.size()];
         return buffer.toArray(studies);
+    }
+
+    public boolean remove(Studied studied) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM Studied WHERE student=? and course=?");
+            statement.setString(1, studied.getStudent().getId());
+            statement.setString(2, studied.getCourse().getCode());
+            if (statement.executeUpdate() > 0)
+                return true;
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean remove(Studies studies) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM Studies WHERE student=? AND course=?");
+            statement.setString(1, studies.getStudent().getId());
+            statement.setString(2, studies.getCourse().getCode());
+            if (statement.executeUpdate() > 0)
+                return true;
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public class StudentAlreadyStudiesCourseException extends Exception {
