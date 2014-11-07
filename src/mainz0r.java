@@ -15,4 +15,6 @@ public class mainz0r {
         System.out.println(studentist);
 
         // Some testing..
-        Tests.testStudentist(studentist); } }
+        //Tests.testStudentist(studentist);
+    }
+}

@@ -5,6 +5,7 @@ import nu.vart.lu.studentist.Model;
 import nu.vart.lu.studentist.models.Course;
 import nu.vart.lu.studentist.models.Student;
 import nu.vart.lu.studentist.models.Studied;
+import nu.vart.lu.studentist.models.Studies;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -324,7 +325,7 @@ public class Database {
     public Student[] getStudentsByCourse(String course) {
         List<Student> buffer = new ArrayList<Student>();
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT student.id, student.name FROM student LEFT JOIN studies ON student.id=studies.student WHERE course=? ");
+            PreparedStatement statement = connection.prepareStatement("SELECT student.id, student.name FROM Student LEFT JOIN studies ON student.id=studies.student WHERE course=? ");
             statement.setString(1, course);
             ResultSet result = statement.executeQuery();
 
@@ -338,6 +339,41 @@ public class Database {
 
         Student[] students = new Student[buffer.size()];
         return buffer.toArray(students);
+    }
+
+    public Studied[] getStudied(Student student) {
+        List<Studied> buffer = new LinkedList<Studied>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade FROM Studied WHERE student=?");
+            statement.setString(1, student.getId());
+            ResultSet result = statement.executeQuery();
+            while (result.next()) {
+                buffer.add(new Studied(student, getCourse(result.getString(2)), result.getString(3))); }
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+
+        Studied[] studied = new Studied[buffer.size()];
+        return buffer.toArray(studied);
+    }
+
+    public Studies[] getStudies(Student student) {
+        List<Studies> buffer = new LinkedList<Studies>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT student, course FROM Studies WHERE student=?");
+            statement.setString(1, student.getId());
+            ResultSet result = statement.executeQuery();
+            while (result.next()) {
+                buffer.add(new Studies(student, getCourse(result.getString(2))));
+            }
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+
+        Studies[] studies = new Studies[buffer.size()];
+        return buffer.toArray(studies);
     }
 
     public class StudentAlreadyStudiesCourseException extends Exception {

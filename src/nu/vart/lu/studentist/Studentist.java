@@ -4,6 +4,7 @@ import nu.vart.lu.studentist.lib.Database;
 import nu.vart.lu.studentist.models.Course;
 import nu.vart.lu.studentist.models.Student;
 import nu.vart.lu.studentist.models.Studied;
+import nu.vart.lu.studentist.models.Studies;
 
 public class Studentist {
     public Database database;
@@ -39,5 +40,13 @@ public class Studentist {
 
     public String toString() {
         return "Studentist : " + title + " - " + database.uri;
+    }
+
+    public Studied[] getStudied(Student student) {
+        return database.getStudied(student);
+    }
+
+    public Studies[] getStudies(Student student) {
+        return database.getStudies(student);
     }
 }
