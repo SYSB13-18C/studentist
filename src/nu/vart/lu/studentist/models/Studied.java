@@ -1,6 +1,8 @@
 package nu.vart.lu.studentist.models;
 
-public class Studied {
+import nu.vart.lu.studentist.Model;
+
+public class Studied extends Model {
     protected Course course;
     protected String grade;
     protected Student student;
@@ -22,4 +24,7 @@ public class Studied {
     public Student getStudent() {
         return student;
     }
+
+    @Override
+    public void validate() { }
 }

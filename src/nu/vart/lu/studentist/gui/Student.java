@@ -1,5 +1,6 @@
 package nu.vart.lu.studentist.gui;
 
+import nu.vart.lu.studentist.models.Course;
 import nu.vart.lu.studentist.models.Studied;
 import nu.vart.lu.studentist.models.Studies;
 
@@ -24,7 +25,7 @@ public class Student extends Page {
         studied = studentist.getStudied(student);
         studiesTable = new StudiesTable();
         studiedTable = new StudiedTable();
-        add(new JLabel(student.getName() + " " + student.getId()), BorderLayout.NORTH);
+        add(new GUI.Title(student.getId() + " " + student.getName()), BorderLayout.NORTH);
         JPanel sections = new JPanel(new GridLayout(0, 1));
         sections.add(studiesTable);
         sections.add(studiedTable);
@@ -34,7 +35,7 @@ public class Student extends Page {
     protected class StudiedTable extends JPanel {
         public StudiedTable() {
             super(new GridLayout(0, 1));
-            add(new JLabel("Completed " + studied.length + " course(s)."));
+            add(new GUI.Title("Completed " + studied.length + " course(s).", 24));
             for (int i = 0; i < studied.length; i++)
                 add(new Record(studied[i]));
         }
@@ -70,9 +71,10 @@ public class Student extends Page {
     protected class StudiesTable extends JPanel {
         public StudiesTable() {
             super(new GridLayout(0, 1));
-            add(new JLabel("Currently studying " + studies.length + " course(s)."));
+            add(new GUI.Title("Currently studying " + studies.length + " course(s).", 24));
             for (int i = 0; i < studies.length; i++)
                 add(new Record(studies[i]));
+            add(new Assigner());
         }
 
         protected class Record extends JPanel {
@@ -88,6 +90,7 @@ public class Student extends Page {
                 add(new JLabel("" + studies.getCourse().getPoints()));
                 grader = new Grader();
                 add(new Grader());
+                add(new Remove());
             }
 
             protected class Grader extends JComboBox<String> implements ActionListener {
@@ -98,14 +101,58 @@ public class Student extends Page {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("action perf00rmed");
-                    System.out.println(e.getSource());
-                    System.out.println(getSelectedItem());
                     String grade = (String)getSelectedItem();
                     if (grade != "I") {
                         studentist.completeCourse(studies, grade);
                         gui.setComponent(new Student(gui, student));
                     }
+                }
+            }
+
+            protected class Remove extends JButton implements ActionListener {
+                public Remove() {
+                    super("X");
+                    addActionListener(this);
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    studentist.remove(studies);
+                    gui.setComponent(new Student(gui, student));
+                }
+            }
+        }
+
+        protected class Assigner extends JPanel {
+            protected Course[] availableCourses;
+            public Assigner() {
+                super(new GridLayout(1, 0));
+                add(new JLabel("Assign Course : "));
+                availableCourses = studentist.getAvailableCourses(student);
+                add(new CourseChooser());
+            }
+
+            private class CourseChooser extends JComboBox<Course> implements ActionListener, ListCellRenderer<Course> {
+                private CourseChooser() {
+                    super(availableCourses);
+                    addActionListener(this);
+                    setRenderer(this);
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        studentist.assign(student, (Course)getSelectedItem());
+                        gui.setComponent(new Student(gui, student));
+                    } catch (Studies.AlreadyStudiesException e1) {
+                        gui.feedback.add(e1.getMessage());
+                        e1.printStackTrace();
+                    }
+                }
+
+                @Override
+                public Component getListCellRendererComponent(JList<? extends Course> jList, Course course, int i, boolean b, boolean b2) {
+                    return new JLabel(course.getCode() + " : " + course.getName());
                 }
             }
         }

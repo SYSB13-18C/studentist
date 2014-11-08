@@ -7,23 +7,7 @@ public class Course extends Model {
     protected String name;
     protected int points;
 
-    /**
-     * TODO
-     *  handle empty (0 length) code and string values.
-     *  restrictions on points (negative? more than 30?)
-     */
-    public Course(String code, String name, int points) throws CodeTooLongException, NameTooLongException {
-        if (code.length() > 10)
-            throw new CodeTooLongException();
-        if (name.length() > 20)
-            throw new NameTooLongException();
-
-        this.code = code;
-        this.name = name;
-        this.points = points;
-    }
-
-    public Course(String code, String name, int points, boolean skipCheck) {
+    public Course(String code, String name, int points) {
         this.code = code;
         this.name = name;
         this.points = points;
@@ -39,6 +23,24 @@ public class Course extends Model {
 
     public int getPoints() {
         return points;
+    }
+
+    @Override
+    public String toString() {
+        return code;
+    }
+
+    /**
+     * TODO
+     *  handle empty (0 length) code and string values.
+     *  restrictions on points (negative? more than 30?)
+     */
+    @Override
+    public void validate() throws CodeTooLongException, NameTooLongException {
+        if (code.length() > 10)
+            throw new CodeTooLongException();
+        if (name.length() > 20)
+            throw new NameTooLongException();
     }
 
     public class CodeTooLongException extends Exception {

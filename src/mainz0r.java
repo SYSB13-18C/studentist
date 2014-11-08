@@ -7,12 +7,15 @@ import java.sql.*;
 public class mainz0r {
     public static void main(String[] argv) {
         // Launch Studentist and a GUI to control it.
-        System.out.println("Creating Studentist");
-        Studentist studentist = new Studentist("jdbc:sqlserver://vart.nu:8888;databaseName=Studentist;user=mama;password=papa;");
+        System.out.println("\n # Creating Studentist");
+        Studentist studentist = new Studentist("jdbc:sqlserver://vart.nu:8887;databaseName=Studentist;user=mama;password=papa;");
 
-        System.out.println("Creating GUI");
-        new GUI(studentist);
-        System.out.println(studentist);
+        System.out.println("\n # Creating GUI");
+        GUI gui = new GUI(studentist);
+
+        gui.feedback.add("HI");
+        gui.feedback.add("THERE");
+        System.out.println("\n # Loaded " + studentist);
 
         // Some testing..
         //Tests.testStudentist(studentist);

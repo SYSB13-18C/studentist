@@ -11,7 +11,7 @@ public class Studentist {
     public String title = "Studentist";
 
     public Studentist(String databaseUri) {
-        database = new Database(databaseUri);
+       database = new Database(databaseUri);
     }
 
     public Course addCourse(String code, String name, int points) throws Course.CodeTooLongException, Course.NameTooLongException, Model.DuplicateKeyException {
@@ -49,7 +49,7 @@ public class Studentist {
     }
 
     public String toString() {
-        return "Studentist : " + title + " - " + database.uri;
+        return "Studentist : " + title + " - " + database.getUri();
     }
 
     public Studied[] getStudied(Student student) {
@@ -60,7 +60,16 @@ public class Studentist {
         return database.getStudies(student);
     }
 
-    public boolean remove(Studied studied) {
-        return database.remove(studied);
+    public boolean remove(Studied studied) { return database.remove(studied); }
+
+    public boolean remove(Studies studies) { return database.remove(studies); }
+
+    public Course[] getAvailableCourses(Student student) { return database.getAvailableCourses(student); }
+
+    public Studies assign(Student student, Course course) throws Studies.AlreadyStudiesException {
+        Studies studies = new Studies(student, course);
+        studies.validate();
+        database.addStudies(studies);
+        return studies;
     }
 }

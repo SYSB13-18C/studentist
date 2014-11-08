@@ -1,6 +1,8 @@
 package nu.vart.lu.studentist.models;
 
-public class Student {
+import nu.vart.lu.studentist.Model;
+
+public class Student extends Model {
     protected String id;
     protected String name;
 
@@ -20,4 +22,7 @@ public class Student {
     public String toString() {
         return id + " " + name;
     }
+
+    @Override
+    public void validate() { }
 }

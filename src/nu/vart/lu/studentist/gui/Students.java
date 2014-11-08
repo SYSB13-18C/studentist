@@ -42,7 +42,7 @@ public class Students extends Page {
         public void set(nu.vart.lu.studentist.models.Student[] students) {
             this.students = students;
             removeAll();
-            System.out.println("found " + students.length + " students" + students);
+            add(new GUI.Title("Found " + students.length + " students."));
             for (int i = 0; i < students.length; i++)
                 add(new Student(students[i]));
             revalidate();
@@ -69,16 +69,17 @@ public class Students extends Page {
     public class Student extends JPanel implements ActionListener {
         protected nu.vart.lu.studentist.models.Student student;
         protected JButton id;
-        protected JButton name;
+        protected JLabel name;
 
         public Student(nu.vart.lu.studentist.models.Student student) {
+            super(new GridLayout(0, 2));
             this.student = student;
             id = new JButton(student.getId());
-            name = new JButton(student.getName());
+            name = new JLabel(student.getName());
             add(id);
             add(name);
             id.addActionListener(this);
-            name.addActionListener(this);
+            //name.addActionListener(this);
         }
 
         @Override

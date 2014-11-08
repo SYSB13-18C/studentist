@@ -16,8 +16,8 @@ import java.util.List;
  * DAL for our MsSQL database.
  */
 public class Database {
-    public String uri;
-    public Connection connection;
+    protected String uri;
+    public String getUri() { return uri; }
 
     /**
      * Construct a database layer and connect (mssql)
@@ -26,18 +26,18 @@ public class Database {
      */
     public Database(String uri) {
         this.uri = uri;
-        connect();
     }
 
     /**
      * Adds a new course.
      * @param course The course (duh!)
      * @return True if added or false otherwise.
-     * @throws InvalidValueException When a value is too long (either code(10) or name(20)).
+     * @throws Model.InvalidValueException When a value is too long (either code(10) or name(20)).
      * TODO return something better (plenty of errors may occur... id exists.. negative points.. ugly name)
      */
     public boolean addCourse(Course course) throws Model.InvalidValueException, Model.DuplicateKeyException {
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Course VALUES (?, ?, ?)");
             statement.setString(1, course.getCode());
             statement.setString(2, course.getName());
@@ -59,9 +59,10 @@ public class Database {
         return false;
     }
 
-    public boolean addStudent(String id, String name){
+    public boolean addStudent(String id, String name) {
         // TODO hantera fel när ID redan finns, con broken, ?
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Student (id, name) VALUES (?, ?)");
             statement.setString(1, id);
             statement.setString(2, name);
@@ -82,6 +83,7 @@ public class Database {
 
     public boolean addStudied(Studied studied) {
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Studied (student, course, grade) VALUES (?, ?, ?)");
             statement.setString(1, studied.getStudent().getId());
             statement.setString(2, studied.getCourse().getCode());
@@ -97,52 +99,34 @@ public class Database {
         return false;
     }
 
-    public boolean addStudentToCourse(Student student, Course course) throws StudentAlreadyStudiesCourseException {
+    public boolean addStudies(Studies studies) throws Studies.AlreadyStudiesException {
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Studies (student, course) VALUES (?, ?)");
-            statement.setString(1, student.getId());
-            statement.setString(2, course.getCode());
+            statement.setString(1, studies.getStudent().getId());
+            statement.setString(2, studies.getCourse().getCode());
             statement.executeUpdate();
-            System.out.println("Student tillagd i studies");
             return true;
         }
         catch (SQLServerException e) {
             if (e.getErrorCode() == 2627)
-                throw new StudentAlreadyStudiesCourseException(student, course);
+                throw studies.new AlreadyStudiesException();
             else {
                 System.err.println("OOOPS! " + e.getMessage());
                 e.printStackTrace();
             }
         }
         catch (SQLException e) {
-            System.err.println("Kunde inte lägga till " + student + " till " + course + "." + e.getMessage());
+            System.err.println("Kunde inte lägga till " + studies.getStudent() + " till " + studies.getCourse() + "." + e.getMessage());
             e.printStackTrace();
         }
 
         return false;
     }
 
-    /**
-     * Establish the connection.
-     */
-    public void connect() {
-        try {
-            System.out.println("Connecting to " + uri);
-            connection = DriverManager.getConnection(uri);
-            System.out.println("Connected to " + uri);
-        } catch (SQLException e) {
-            System.err.println("Could not connect to database " + uri);
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.err.println("Unknown exception in Database.connect() " + uri);
-            e.printStackTrace();
-        } finally {
-            System.out.println("ok");
-        }
-    }
-
     public boolean deleteCourse(String code){
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
             statement.setString(1, code);
             statement.executeQuery();
@@ -158,6 +142,7 @@ public class Database {
 
     public boolean deleteStudent(String id){
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
             statement.setString(1, id);
             statement.executeQuery();
@@ -171,14 +156,36 @@ public class Database {
         return false;
     }
 
+    public Course[] getAvailableCourses(Student student) {
+        List<Course> buffer = new LinkedList<Course>();
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            //PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code NOT IN (SELECT course FROM Studies WHERE Studies.student=? OR Studied.student=?)");
+            PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code NOT IN (SELECT course FROM Studied WHERE student=?) AND code NOT IN (SELECT course FROM Studies WHERE student=?)");
+            statement.setString(1, student.getId());
+            statement.setString(2, student.getId());
+            ResultSet result = statement.executeQuery();
+            while (result.next()) {
+                buffer.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+
+        Course[] courses = new Course[buffer.size()];
+        return buffer.toArray(courses);
+    }
+
     public Course getCourse(String code) {
         Course course = null;
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code = ?");
             statement.setString(1, code);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
-                course = new Course(result.getString("code"), result.getString("name"), result.getInt("points"), false);
+                course = new Course(result.getString("code"), result.getString("name"), result.getInt("points"));
             }
         } catch (SQLException e) {
             System.err.println("Database.getCourse() error : " + e.getMessage());
@@ -190,11 +197,12 @@ public class Database {
     public List<Course> getCourses() {
         List<Course> courses = new ArrayList<Course>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM course");
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
-                courses.add(new Course(result.getString(1), result.getString(2), result.getInt(3), false));
+                courses.add(new Course(result.getString(1), result.getString(2), result.getInt(3)));
             }
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
@@ -215,6 +223,7 @@ public class Database {
         PreparedStatement statement = null;
         Student student = null;
         try {
+            Connection connection = DriverManager.getConnection(uri);
             statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id = ?");
             statement.setString(1, id);
             ResultSet result = statement.executeQuery();
@@ -234,6 +243,7 @@ public class Database {
     public Studied[] getStudiedByCourse(Course course) {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, Student.name AS studentName, course, Course.name AS courseName, points, grade FROM Studied INNER JOIN Student ON Student.id = Studied.student INNER JOIN Course ON Studied.course = Course.code WHERE course = ?");
             statement.setString(1, course.getCode());
             ResultSet result = statement.executeQuery();
@@ -241,7 +251,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Studied(
                     new Student(result.getString(1), result.getString(2)),
-                    new Course(result.getString(3), result.getString(4), result.getInt(5), false),
+                    new Course(result.getString(3), result.getString(4), result.getInt(5)),
                     result.getString(6)));
             }
         } catch (SQLException e) {
@@ -256,6 +266,7 @@ public class Database {
     public Studied[] getStudiedAtCourse(String courseCode) {
         List<Studied> studentOnCourse = new ArrayList<Studied>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade FROM studied WHERE course = ?");
             statement.setString(1, courseCode);
             ResultSet result = statement.executeQuery();
@@ -279,6 +290,7 @@ public class Database {
     public Student[] getStudents() {
         ArrayList<Student> buffer = new ArrayList<Student>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student");
             ResultSet result = statement.executeQuery();
 
@@ -302,6 +314,7 @@ public class Database {
     public Student[] getStudents(String query) {
         ArrayList<Student> buffer = new ArrayList<Student>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id LIKE ? OR name LIKE ?");
             statement.setString(1, "%" + query + "%");
             statement.setString(2, "%" + query + "%");
@@ -325,6 +338,7 @@ public class Database {
     public Student[] getStudentsByCourse(String course) {
         List<Student> buffer = new ArrayList<Student>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student.id, student.name FROM Student LEFT JOIN studies ON student.id=studies.student WHERE course=? ");
             statement.setString(1, course);
             ResultSet result = statement.executeQuery();
@@ -344,6 +358,7 @@ public class Database {
     public Studied[] getStudied(Student student) {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade FROM Studied WHERE student=?");
             statement.setString(1, student.getId());
             ResultSet result = statement.executeQuery();
@@ -361,6 +376,7 @@ public class Database {
     public Studies[] getStudies(Student student) {
         List<Studies> buffer = new LinkedList<Studies>();
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, course FROM Studies WHERE student=?");
             statement.setString(1, student.getId());
             ResultSet result = statement.executeQuery();
@@ -378,6 +394,7 @@ public class Database {
 
     public boolean remove(Studied studied) {
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Studied WHERE student=? and course=?");
             statement.setString(1, studied.getStudent().getId());
             statement.setString(2, studied.getCourse().getCode());
@@ -392,6 +409,7 @@ public class Database {
 
     public boolean remove(Studies studies) {
         try {
+            Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Studies WHERE student=? AND course=?");
             statement.setString(1, studies.getStudent().getId());
             statement.setString(2, studies.getCourse().getCode());
@@ -403,25 +421,4 @@ public class Database {
         }
         return false;
     }
-
-    public class StudentAlreadyStudiesCourseException extends Exception {
-        protected Student student;
-        protected Course course;
-
-        public StudentAlreadyStudiesCourseException(Student student, Course course) {
-            super("The student you are trying to add to some course is already added to that course.. ok?");
-            this.student = student;
-            this.course = course;
-        }
-
-        public Course getCourse() {
-            return course;
-        }
-
-        public Student getStudent() {
-            return student;
-        }
-    }
-
-    protected class InvalidValueException extends Exception { }
 }

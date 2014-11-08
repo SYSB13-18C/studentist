@@ -1,6 +1,11 @@
 package nu.vart.lu.studentist;
 
-public class Model {
+import nu.vart.lu.studentist.models.Course;
+
+public abstract class Model {
+    // NOTE: not optimal.. type of extended exception seems lost
+    public abstract void validate() throws Exception;
+
     public class InvalidValueException extends Exception {
         public InvalidValueException(String message) {
             super(message);
