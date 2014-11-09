@@ -11,7 +11,7 @@ public class Studentist {
     public String title = "Studentist";
 
     public Studentist(String databaseUri) {
-       database = new Database(databaseUri);
+        database = new Database(databaseUri);
     }
 
     public Course addCourse(String code, String name, int points) throws Course.CodeTooLongException, Course.NameTooLongException, Model.DuplicateKeyException {
