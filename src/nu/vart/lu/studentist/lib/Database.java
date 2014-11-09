@@ -331,6 +331,32 @@ public class Database {
         return buffer.toArray(students);
     }
 
+    /**
+     * Get a set of courses where query matches code or name.
+     *
+     * @query The query (searches code and name).
+     * @return The Student set.
+     */
+    public Course[] getCourses(String query) {
+        ArrayList<Course> buffer = new ArrayList<Course>();
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code LIKE ? OR name LIKE ?");
+            statement.setString(1, "%" + query + "%");
+            statement.setString(2, "%" + query + "%");
+            ResultSet result = statement.executeQuery();
+
+            while (result.next()) {
+                buffer.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        Course[] courses = new Course[buffer.size()];
+        return buffer.toArray(courses);
+    }
+
     public Student[] getStudentsByCourse(Course course) {
         return getStudentsByCourse(course.getCode());
     }
