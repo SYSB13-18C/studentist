@@ -130,6 +130,7 @@ public class GUI extends JFrame {
             JLabel label = new JLabel(message);
             label.setHorizontalAlignment(SwingConstants.CENTER);
             messages.add(label);
+            revalidate();
         }
 
         private class Clear extends JButton implements ActionListener {
