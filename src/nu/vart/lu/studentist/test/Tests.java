@@ -1,12 +1,8 @@
 package nu.vart.lu.studentist.test;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import nu.vart.lu.studentist.Model;
 import nu.vart.lu.studentist.Studentist;
-import nu.vart.lu.studentist.lib.Database;
+import nu.vart.lu.studentist.Database;
 import nu.vart.lu.studentist.models.Course;
 
 public class Tests {

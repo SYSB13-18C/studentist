@@ -1,6 +1,5 @@
 package nu.vart.lu.studentist;
 
-import nu.vart.lu.studentist.lib.Database;
 import nu.vart.lu.studentist.models.Course;
 import nu.vart.lu.studentist.models.Student;
 import nu.vart.lu.studentist.models.Studied;
@@ -59,6 +58,8 @@ public class Studentist {
     public Studies[] getStudies(Student student) {
         return database.getStudies(student);
     }
+
+    public boolean remove(Course course) { return database.remove(course); }
 
     public boolean remove(Studied studied) { return database.remove(studied); }
 

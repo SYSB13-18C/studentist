@@ -1,4 +1,4 @@
-package nu.vart.lu.studentist.lib;
+package nu.vart.lu.studentist;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import nu.vart.lu.studentist.Model;
@@ -416,6 +416,20 @@ public class Database {
 
         Studies[] studies = new Studies[buffer.size()];
         return buffer.toArray(studies);
+    }
+
+    public boolean remove(Course course) {
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
+            statement.setString(1, course.getCode());
+            if (statement.executeUpdate() > 0)
+                return true;
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public boolean remove(Studied studied) {
