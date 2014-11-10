@@ -13,6 +13,10 @@ public class Studentist {
         database = new Database(databaseUri);
     }
 
+    public boolean add(Student student) throws Model.DuplicateKeyException {
+        return database.add(student);
+    }
+
     public Course addCourse(String code, String name, int points) throws Course.CodeTooLongException, Course.NameTooLongException, Model.DuplicateKeyException {
         Course course = new Course(code, name, points);
         try {

@@ -59,20 +59,18 @@ public class Database {
         return false;
     }
 
-    public boolean addStudent(String id, String name) {
+    public boolean add(Student student) throws Model.DuplicateKeyException {
         // TODO hantera fel när ID redan finns, con broken, ?
         try {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Student (id, name) VALUES (?, ?)");
-            statement.setString(1, id);
-            statement.setString(2, name);
-            statement.executeQuery();
-            System.out.println("Student tillagd");
+            statement.setString(1, student.getId());
+            statement.setString(2, student.getName());
+            statement.executeUpdate();
             return true;
         }
         catch (SQLServerException e) { // ID already exists (perhaps something else too..)
-            //System.out.println("ID already exists " + e.getMessage());
-            //e.printStackTrace();
+            throw student.new DuplicateKeyException("Oh noes!");
         }
         catch (SQLException e) {
             System.err.println("SQL-error when adding student " + e.getMessage());
@@ -129,7 +127,7 @@ public class Database {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
             statement.setString(1, code);
-            statement.executeQuery();
+            statement.executeUpdate();
             System.out.println("Course deleted");
             return true;
         }
@@ -145,7 +143,7 @@ public class Database {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
             statement.setString(1, id);
-            statement.executeQuery();
+            statement.executeUpdate();
             System.out.println("Student borttagen");
             return true;
         }
@@ -419,6 +417,8 @@ public class Database {
     }
 
     public boolean remove(Course course) {
+        // TODO catch SQLServerException -- The DELETE statement conflicted with the REFERENCE constraint "STUDIES_FK_COURSE".
+        //   or (first) remove all Studies and Studied relation
         try {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");

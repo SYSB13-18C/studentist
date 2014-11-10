@@ -125,10 +125,12 @@ public class Student extends Page {
 
         protected class Assigner extends JPanel {
             protected Course[] availableCourses;
+
             public Assigner() {
                 super(new GridLayout(1, 0));
                 add(new JLabel("Assign Course : "));
                 availableCourses = studentist.getAvailableCourses(student);
+                System.out.println("courses" + availableCourses);
                 add(new CourseChooser());
             }
 
@@ -152,6 +154,7 @@ public class Student extends Page {
 
                 @Override
                 public Component getListCellRendererComponent(JList<? extends Course> jList, Course course, int i, boolean b, boolean b2) {
+                    if (i < 0) return new JLabel("");
                     return new JLabel(course.getCode() + " : " + course.getName());
                 }
             }
