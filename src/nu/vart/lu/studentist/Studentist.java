@@ -21,12 +21,23 @@ public class Studentist {
         database.add(course);
     }
 
+    public Studies assign(Student student, Course course, String semester) throws Studies.AlreadyStudiesException, Studies.MaxPointsException {
+        Studies studies = new Studies(student, course, semester);
+        studies.validate();
+        database.addStudies(studies);
+        return studies;
+    }
+
     public Studied completeCourse(Studies studies, String grade) {
-        Studied studied = new Studied(studies.getStudent(), studies.getCourse(), grade);
+        Studied studied = new Studied(studies.getStudent(), studies.getCourse(), grade, studies.getSemester());
         database.addStudied(studied);
         database.remove(studies);
         return studied;
     }
+
+    public Course[] getAvailableCourses(Student student) { return database.getAvailableCourses(student); }
+
+    public Student[] getAvailableStudents(Course course) { return database.getAvailableStudents(course); }
 
     public Student getStudent(String id) {
         return database.getStudent(id);
@@ -38,10 +49,6 @@ public class Studentist {
 
     public Studied[] getStudiedByCourse(Course course) {
         return database.getStudiedByCourse(course);
-    }
-
-    public String toString() {
-        return "Studentist : " + title + " - " + database.getUri();
     }
 
     public Studied[] getStudied(Student student) {
@@ -70,14 +77,7 @@ public class Studentist {
 
     public void remove(Studies studies) { database.remove(studies); }
 
-    public Course[] getAvailableCourses(Student student) { return database.getAvailableCourses(student); }
-
-    public Student[] getAvailableStudents(Course course) { return database.getAvailableStudents(course); }
-
-    public Studies assign(Student student, Course course) throws Studies.AlreadyStudiesException {
-        Studies studies = new Studies(student, course);
-        studies.validate();
-        database.addStudies(studies);
-        return studies;
+    public String toString() {
+        return "Studentist : " + title + " - " + database.getUri();
     }
 }

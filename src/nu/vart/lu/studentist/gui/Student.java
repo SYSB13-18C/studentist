@@ -26,7 +26,7 @@ public class Student extends Page {
         studied = studentist.getStudied(student);
         studiesTable = new StudiesTable();
         studiedTable = new StudiedTable();
-        add(new GUI.Title(student.getId() + " " + student.getName()), BorderLayout.NORTH);
+        add(new GUI.Title(student.getId() + " : " + student.getName()), BorderLayout.NORTH);
         JPanel sections = new JPanel(new GridLayout(0, 1));
         sections.add(studiesTable);
         sections.add(studiedTable);
@@ -71,6 +71,7 @@ public class Student extends Page {
                 add(new JLabel(studied.getCourse().getName()));
                 add(new JLabel("" + studied.getCourse().getPoints()));
                 add(new JLabel(studied.getGrade()));
+                add(new JLabel(studied.getSemester()));
                 add(new Remove());
             }
 
@@ -101,7 +102,7 @@ public class Student extends Page {
         protected class Record extends JPanel {
             protected Studies studies;
             protected Grader grader;
-            protected String[] grades = { "I", "A", "B", "C", "D", "E", "U" };
+            protected String[] grades = { "Incomplete", "A", "B", "C", "D", "E", "U" };
 
             public Record(Studies studies) {
                 super(new GridLayout(1, 0));
@@ -109,6 +110,7 @@ public class Student extends Page {
                 add(new JLabel(studies.getCourse().getCode()));
                 add(new JLabel(studies.getCourse().getName()));
                 add(new JLabel("" + studies.getCourse().getPoints()));
+                add(new JLabel(studies.getSemester()));
                 grader = new Grader();
                 add(new Grader());
                 add(new Remove());
@@ -123,7 +125,7 @@ public class Student extends Page {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String grade = (String)getSelectedItem();
-                    if (grade != "I") {
+                    if (grade != "Incomplete") {
                         studentist.completeCourse(studies, grade);
                         gui.setComponent(new Student(gui, student));
                     }
@@ -146,16 +148,23 @@ public class Student extends Page {
 
         protected class Assigner extends JPanel {
             protected Course[] availableCourses;
+            protected CourseChooser courseChooser;
+            protected SemesterChooser semesterChooser;
+            // TODO no hard-code, kthx
+            protected String[] availableSemesters = { "2014 Fall", "2015 Spring", "2015 Fall", "2016 Spring" };
 
             public Assigner() {
                 super(new GridLayout(1, 0));
                 add(new JLabel("Assign Course : "));
                 availableCourses = studentist.getAvailableCourses(student);
-                add(new CourseChooser());
+                semesterChooser = new SemesterChooser();
+                courseChooser = new CourseChooser();
+                add(courseChooser);
+                add(semesterChooser);
             }
 
-            private class CourseChooser extends JComboBox<Course> implements ActionListener, ListCellRenderer<Course> {
-                private CourseChooser() {
+            protected class CourseChooser extends JComboBox<Course> implements ActionListener, ListCellRenderer<Course> {
+                protected CourseChooser() {
                     super(availableCourses);
                     addActionListener(this);
                     setRenderer(this);
@@ -164,11 +173,14 @@ public class Student extends Page {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        studentist.assign(student, (Course)getSelectedItem());
+                        studentist.assign(student, (Course)getSelectedItem(), (String)semesterChooser.getSelectedItem());
                         gui.setComponent(new Student(gui, student));
-                    } catch (Studies.AlreadyStudiesException e1) {
+                    }
+                    catch (Studies.AlreadyStudiesException e1) {
                         gui.feedback.add(e1.getMessage());
-                        e1.printStackTrace();
+                    }
+                    catch (Studies.MaxPointsException e1) {
+                        gui.feedback.add("A Student may study a maximum of 45 points per semester.");
                     }
                 }
 
@@ -176,7 +188,13 @@ public class Student extends Page {
                 public Component getListCellRendererComponent(JList<? extends Course> jList, Course course, int i, boolean b, boolean b2) {
                     // This gets called with index -1 if jList is empty.
                     if (i < 0) return new JLabel("");
-                    return new JLabel(course.getCode() + " : " + course.getName());
+                    return new JLabel(course.getCode() + " : " + course.getName() + " (" + course.getPoints() + " points)");
+                }
+            }
+
+            protected class SemesterChooser extends JComboBox<String> {
+                protected SemesterChooser() {
+                    super(availableSemesters);
                 }
             }
         }

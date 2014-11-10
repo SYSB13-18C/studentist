@@ -1,7 +1,6 @@
 package nu.vart.lu.studentist;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
-import nu.vart.lu.studentist.Model;
 import nu.vart.lu.studentist.models.Course;
 import nu.vart.lu.studentist.models.Student;
 import nu.vart.lu.studentist.models.Studied;
@@ -79,10 +78,11 @@ public class Database {
     public boolean addStudied(Studied studied) {
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO Studied (student, course, grade) VALUES (?, ?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO Studied (student, course, grade, semester) VALUES (?, ?, ?, ?)");
             statement.setString(1, studied.getStudent().getId());
             statement.setString(2, studied.getCourse().getCode());
             statement.setString(3, studied.getGrade());
+            statement.setString(4, studied.getSemester());
             statement.executeUpdate();
             System.out.println("Student tillagd till studied");
             return true;
@@ -94,12 +94,16 @@ public class Database {
         return false;
     }
 
-    public boolean addStudies(Studies studies) throws Studies.AlreadyStudiesException {
+    public boolean addStudies(Studies studies) throws Studies.AlreadyStudiesException, Studies.MaxPointsException {
+        if (getPoints(studies.getStudent(), studies.getSemester()) + studies.getCourse().getPoints() > 45)
+            throw studies.new MaxPointsException("Oh no!");
+
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO Studies (student, course) VALUES (?, ?)");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO Studies (student, course, semester) VALUES (?, ?, ?)");
             statement.setString(1, studies.getStudent().getId());
             statement.setString(2, studies.getCourse().getCode());
+            statement.setString(3, studies.getSemester());
             statement.executeUpdate();
             return true;
         }
@@ -217,7 +221,7 @@ public class Database {
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
-                courses.add(new Course(result.getString(1), result.getString(2), result.getInt(3)));
+                courses.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
             }
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
@@ -227,47 +231,63 @@ public class Database {
         return courses;
     }
 
+    public int getPoints(Student student, String semester) {
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("SELECT SUM(points) AS points FROM Studies INNER JOIN Course ON Studies.course = Course.code WHERE Studies.student = ? AND Studies.semester = ?");
+            statement.setString(1, student.getId());
+            statement.setString(2, semester);
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return result.getInt("points");
+        } catch (SQLException e) {
+            System.err.println("Uh oh! " + e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     /**
      * Find that one student..
      *
      * @param id of student
      * @return The Student
-     * @throws SQLException Some SQL exception.
      */
     public Student getStudent(String id) {
-        PreparedStatement statement = null;
-        Student student = null;
         try {
             Connection connection = DriverManager.getConnection(uri);
-            statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id = ?");
+            PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id = ?");
             statement.setString(1, id);
             ResultSet result = statement.executeQuery();
 
             result.next();
 
-            student = new Student(result.getString(1), result.getString(2));
+            Student student = new Student(result.getString("id"), result.getString("name"));
 
             result.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
+            return student;
         }
-
-        return student;
+        catch (SQLException e) {
+            System.out.println("SQL Error : " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public Studied[] getStudiedByCourse(Course course) {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, Student.name AS studentName, course, Course.name AS courseName, points, grade FROM Studied INNER JOIN Student ON Student.id = Studied.student INNER JOIN Course ON Studied.course = Course.code WHERE course = ?");
+            PreparedStatement statement = connection.prepareStatement("SELECT student, Student.name AS studentName, course, Course.name AS courseName, points, semester, grade FROM Studied INNER JOIN Student ON Student.id = Studied.student INNER JOIN Course ON Studied.course = Course.code WHERE course = ?");
             statement.setString(1, course.getCode());
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
                 buffer.add(new Studied(
-                    new Student(result.getString(1), result.getString(2)),
-                    new Course(result.getString(3), result.getString(4), result.getInt(5)),
-                    result.getString(6)));
+                    new Student(result.getString("student"), result.getString("studentName")),
+                    new Course(result.getString("course"), result.getString("courseName"), result.getInt("points")),
+                    result.getString("grade"),
+                    result.getString("semester")));
             }
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
@@ -310,7 +330,7 @@ public class Database {
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
-                buffer.add(new Student(result.getString(1), result.getString(2)));
+                buffer.add(new Student(result.getString("id"), result.getString("name")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -336,7 +356,7 @@ public class Database {
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
-                buffer.add(new Student(result.getString(1), result.getString(2)));
+                buffer.add(new Student(result.getString("id"), result.getString("name")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -385,7 +405,7 @@ public class Database {
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
-                buffer.add(new Student(result.getString(1), result.getString(2)));
+                buffer.add(new Student(result.getString("student.id"), result.getString("student.name")));
             }
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
@@ -400,11 +420,11 @@ public class Database {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade FROM Studied WHERE student=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade, semester FROM Studied WHERE student=?");
             statement.setString(1, student.getId());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
-                buffer.add(new Studied(student, getCourse(result.getString(2)), result.getString(3))); }
+                buffer.add(new Studied(student, getCourse(result.getString("course")), result.getString("grade"), result.getString("semester"))); }
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -418,11 +438,11 @@ public class Database {
         List<Studies> buffer = new LinkedList<Studies>();
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, course FROM Studies WHERE student=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT student, course, semester FROM Studies WHERE student=?");
             statement.setString(1, student.getId());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
-                buffer.add(new Studies(student, getCourse(result.getString(2))));
+                buffer.add(new Studies(student, getCourse(result.getString("course")), result.getString("semester")));
             }
         } catch (SQLException e) {
             System.err.println("Oh noes!");
@@ -437,11 +457,11 @@ public class Database {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, grade FROM Studied WHERE course=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT student, grade, semester FROM Studied WHERE course=?");
             statement.setString(1, course.getCode());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
-                buffer.add(new Studied(getStudent(result.getString("student")), course, result.getString("grade"))); }
+                buffer.add(new Studied(getStudent(result.getString("student")), course, result.getString("grade"), result.getString("semester"))); }
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -455,11 +475,11 @@ public class Database {
         List<Studies> buffer = new LinkedList<Studies>();
         try {
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, course FROM Studies WHERE course=?");
+            PreparedStatement statement = connection.prepareStatement("SELECT student, course, semester FROM Studies WHERE course=?");
             statement.setString(1, course.getCode());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
-                buffer.add(new Studies(getStudent(result.getString("student")), course));
+                buffer.add(new Studies(getStudent(result.getString("student")), course, result.getString("semester")));
             }
         } catch (SQLException e) {
             System.err.println("Oh noes!");

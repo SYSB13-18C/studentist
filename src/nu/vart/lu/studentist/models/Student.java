@@ -24,5 +24,22 @@ public class Student extends Model {
     }
 
     @Override
-    public void validate() { }
+    public void validate() throws IdTooShortException, NameTooShortException {
+        if (id.length() < 1)
+            throw new IdTooShortException("Oh no");
+        if (name.length() < 1)
+            throw new NameTooShortException("Oh no");
+    }
+
+    public class IdTooShortException extends Exception {
+        public IdTooShortException(String string) {
+            super(string);
+        }
+    }
+
+    public class NameTooShortException extends Exception {
+        public NameTooShortException(String string) {
+            super(string);
+        }
+    }
 }

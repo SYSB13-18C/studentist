@@ -6,11 +6,13 @@ public class Studied extends Model {
     protected Course course;
     protected String grade;
     protected Student student;
+    protected String semester;
 
-    public Studied(Student student, Course course, String grade) {
+    public Studied(Student student, Course course, String grade, String semester) {
         this.student = student;
         this.course = course;
         this.grade = grade;
+        this.semester = semester;
     }
 
     public Course getCourse() {
@@ -19,6 +21,14 @@ public class Studied extends Model {
 
     public String getGrade() {
         return grade;
+    }
+
+    public Studied(String semester) {
+        this.semester = semester;
+    }
+
+    public String getSemester() {
+        return semester;
     }
 
     public Student getStudent() {

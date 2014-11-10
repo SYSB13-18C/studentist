@@ -36,11 +36,16 @@ public class AddStudent extends Page {
         public void actionPerformed(ActionEvent actionEvent) {
             try {
                 nu.vart.lu.studentist.models.Student student = new nu.vart.lu.studentist.models.Student(id.getText(), name.getText());
+                student.validate();
                 studentist.add(student);
                 gui.setComponent(new Student(gui, student));
                 gui.feedback.add("Student " + id.getText() + " - " + name.getText() + " added.");
             } catch (Model.DuplicateKeyException e) {
                 gui.feedback.add("A student with ID " + id.getText() + " already exists.");
+            } catch (nu.vart.lu.studentist.models.Student.NameTooShortException e) {
+                gui.feedback.add("Student name is too short (minimum 1 character).");
+            } catch (nu.vart.lu.studentist.models.Student.IdTooShortException e) {
+                gui.feedback.add("Student id is too short (minimum 1 character).");
             }
         }
     }

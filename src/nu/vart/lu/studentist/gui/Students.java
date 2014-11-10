@@ -46,7 +46,7 @@ public class Students extends Page {
         public void set(nu.vart.lu.studentist.models.Student[] students) {
             this.students = students;
             removeAll();
-            add(new GUI.Title("Found " + students.length + " students."));
+            add(new GUI.Title("Found " + students.length + " student(s)."));
             for (int i = 0; i < students.length; i++)
                 add(new Student(students[i]));
             revalidate();

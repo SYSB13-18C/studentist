@@ -35,7 +35,6 @@ public class Courses extends Page {
         public Add() {
             super("+");
             addActionListener(this);
-            setSize(new Dimension(50, 50));
         }
 
         @Override
@@ -73,7 +72,7 @@ public class Courses extends Page {
         public void set(nu.vart.lu.studentist.models.Course[] courses) {
             this.courses = courses;
             removeAll();
-            add(new GUI.Title("Found " + courses.length + " courses."));
+            add(new GUI.Title("Found " + courses.length + " course(s)."));
             for (int i = 0; i < courses.length; i++)
                 add(new Record(courses[i]));
             revalidate();
