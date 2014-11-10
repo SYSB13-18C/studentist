@@ -8,26 +8,30 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 
 public class Course extends Page {
     protected nu.vart.lu.studentist.models.Course course;
     protected nu.vart.lu.studentist.models.Studies[] studies;
     protected nu.vart.lu.studentist.models.Studied[] studied;
+    protected Statistics statistics;
     protected StudiedTable studiedTable;
     protected StudiesTable studiesTable;
 
     public Course(GUI gui, nu.vart.lu.studentist.models.Course course) {
         super(gui);
         this.course = course;
-        setLayout(new GridLayout(0, 1));
+        setLayout(new BorderLayout());
         add(new GUI.Title(course.getCode() + " " + course.getName() + " (" + course.getPoints() + " points)"), BorderLayout.NORTH);
         JPanel sections = new JPanel(new GridLayout(0, 1));
         studies = studentist.getStudies(course);
         studied = studentist.getStudied(course);
+        statistics = new Statistics();
         studiesTable = new StudiesTable();
         studiedTable = new StudiedTable();
         sections.add(studiesTable);
         sections.add(studiedTable);
+        sections.add(statistics);
         sections.add(new Remove());
         add(sections, BorderLayout.CENTER);
     }
@@ -51,6 +55,71 @@ public class Course extends Page {
         }
     }
 
+    protected class Statistics extends JPanel {
+        protected float throughput = 0;
+        protected int aCount = 0;
+        protected float aPercent = 0;
+        protected int bCount = 0;
+        protected float bPercent = 0;
+        protected int cCount = 0;
+        protected float cPercent = 0;
+        protected int dCount = 0;
+        protected float dPercent = 0;
+        protected int eCount = 0;
+        protected float ePercent = 0;
+        protected int uCount = 0;
+        protected float uPercent = 0;
+
+        protected DecimalFormat format = new DecimalFormat("#.##");
+
+        public Statistics() {
+            super(new GridLayout(0, 1));
+
+            // calculate
+            if (studied.length > 0) {
+                Float length = (float)studied.length;
+                for (int i = 0; i < studied.length; i++) {
+                    if (studied[i].getGrade().compareTo("A") == 0)
+                        aCount++;
+                    else if (studied[i].getGrade().compareTo("B") == 0)
+                        bCount++;
+                    else if (studied[i].getGrade().compareTo("C") == 0)
+                        cCount++;
+                    else if (studied[i].getGrade().compareTo("D") == 0)
+                        dCount++;
+                    else if (studied[i].getGrade().compareTo("E") == 0)
+                        eCount++;
+                    else if (studied[i].getGrade().compareTo("U") == 0)
+                        uCount++;
+                }
+
+                aPercent = Float.valueOf(format.format(aCount / length * 100));
+                bPercent = Float.valueOf(format.format(bCount / length * 100));
+                cPercent = Float.valueOf(format.format(cCount / length * 100));
+                dPercent = Float.valueOf(format.format(dCount / length * 100));
+                ePercent = Float.valueOf(format.format(eCount / length * 100));
+                uPercent = Float.valueOf(format.format(uCount / length * 100));
+
+                throughput = Float.valueOf(format.format((length - uCount) / length * 100));
+            }
+
+            // display
+            add(new Value(throughput + "% throughput"));
+            add(new Value(aPercent + "% A"));
+            add(new Value(bPercent + "% B"));
+            add(new Value(cPercent + "% C"));
+            add(new Value(dPercent + "% D"));
+            add(new Value(ePercent + "% E"));
+            add(new Value(uPercent + "% U"));
+        }
+
+        private class Value extends JLabel {
+            public Value(String string) {
+                super(string);
+                setHorizontalAlignment(JLabel.CENTER);
+            }
+        }
+    }
 
     protected class StudiedTable extends JPanel {
         public StudiedTable() {
