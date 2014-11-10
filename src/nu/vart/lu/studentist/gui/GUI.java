@@ -135,7 +135,7 @@ public class GUI extends JFrame {
 
         private class Clear extends JButton implements ActionListener {
             private Clear() {
-                super("X");
+                super("Clear");
                 addActionListener(this);
             }
 

@@ -1,5 +1,6 @@
 package nu.vart.lu.studentist.gui;
 
+import nu.vart.lu.studentist.Model;
 import nu.vart.lu.studentist.models.Course;
 import nu.vart.lu.studentist.models.Studied;
 import nu.vart.lu.studentist.models.Studies;
@@ -29,7 +30,27 @@ public class Student extends Page {
         JPanel sections = new JPanel(new GridLayout(0, 1));
         sections.add(studiesTable);
         sections.add(studiedTable);
+        sections.add(new Remove());
         add(sections, BorderLayout.CENTER);
+    }
+
+    protected class Remove extends JButton implements ActionListener {
+        public Remove() {
+            super("Remove");
+            addActionListener(this);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            try {
+                studentist.remove(student);
+                gui.feedback.add("Student " + student.getId() + " - " + student.getName() + " removed.");
+                gui.students.search();
+                gui.setComponent(gui.students);
+            } catch (Model.HasRelationsException e) {
+                gui.feedback.add("Student " + student.getId() + " - " + student.getName() + " has relations (remove them first).");
+            }
+        }
     }
 
     protected class StudiedTable extends JPanel {
@@ -130,7 +151,6 @@ public class Student extends Page {
                 super(new GridLayout(1, 0));
                 add(new JLabel("Assign Course : "));
                 availableCourses = studentist.getAvailableCourses(student);
-                System.out.println("courses" + availableCourses);
                 add(new CourseChooser());
             }
 
@@ -154,6 +174,7 @@ public class Student extends Page {
 
                 @Override
                 public Component getListCellRendererComponent(JList<? extends Course> jList, Course course, int i, boolean b, boolean b2) {
+                    // This gets called with index -1 if jList is empty.
                     if (i < 0) return new JLabel("");
                     return new JLabel(course.getCode() + " : " + course.getName());
                 }

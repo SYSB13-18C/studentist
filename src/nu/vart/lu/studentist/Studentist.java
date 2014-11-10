@@ -13,29 +13,18 @@ public class Studentist {
         database = new Database(databaseUri);
     }
 
-    public boolean add(Student student) throws Model.DuplicateKeyException {
-        return database.add(student);
+    public void add(Student student) throws Model.DuplicateKeyException {
+        database.add(student);
     }
 
-    public Course addCourse(String code, String name, int points) throws Course.CodeTooLongException, Course.NameTooLongException, Model.DuplicateKeyException {
-        Course course = new Course(code, name, points);
-        try {
-            if (!database.addCourse(course))
-                return null;
-        } catch (Model.InvalidValueException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return course;
+    public void add(Course course) throws Model.DuplicateKeyException, Model.InvalidValueException {
+        database.add(course);
     }
 
     public Studied completeCourse(Studies studies, String grade) {
         Studied studied = new Studied(studies.getStudent(), studies.getCourse(), grade);
-        if (!database.addStudied(studied))
-            return null; // TODO throw some error
-
-        if (!database.remove(studies))
-            return null; // TODO throw some error
+        database.addStudied(studied);
+        database.remove(studies);
         return studied;
     }
 
@@ -63,11 +52,15 @@ public class Studentist {
         return database.getStudies(student);
     }
 
-    public boolean remove(Course course) { return database.remove(course); }
+    public void remove(Course course) throws Model.HasRelationsException {
+        database.remove(course); }
 
-    public boolean remove(Studied studied) { return database.remove(studied); }
+    public void remove(Student student) throws Model.HasRelationsException {
+        database.remove(student); }
 
-    public boolean remove(Studies studies) { return database.remove(studies); }
+    public void remove(Studied studied) { database.remove(studied); }
+
+    public void remove(Studies studies) { database.remove(studies); }
 
     public Course[] getAvailableCourses(Student student) { return database.getAvailableCourses(student); }
 

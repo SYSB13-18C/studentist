@@ -26,6 +26,10 @@ public class Students extends Page {
         search("");
     }
 
+    public void search() {
+        search(input.getText());
+    }
+
     public void search(String query) {
         result.set(studentist.database.getStudents(query));
     }

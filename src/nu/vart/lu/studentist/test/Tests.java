@@ -19,40 +19,52 @@ public class Tests {
 
         // Course with too long name
         try {
-            System.out.println("Added Course: " + studentist.addCourse("DUMMY", "i am not as dumb as you think i am", 666));
+            Course course = new Course("DUMMY", "i am not as dumb as you think i am", 666);
+            course.validate();
+            studentist.add(course);
+            System.out.println("Added Course: " + course);
         } catch (Course.CodeTooLongException e) {
             System.err.println(e.getMessage());
         } catch (Course.NameTooLongException e) {
             System.err.println(e.getMessage());
         } catch (Model.DuplicateKeyException e) {
+            System.err.println(e.getMessage());
+        } catch (Model.InvalidValueException e) {
             System.err.println(e.getMessage());
         }
 
         // Course with too long code
         try {
-            System.out.println("Added Course: " + studentist.addCourse("DUMMYCOURSE", "i am not so dumb", 666));
+            Course course = new Course("DUMMYCOURSE", "i am not so dumb", 666);
+            course.validate();
+            studentist.add(course);
+            System.out.println("Added Course: " + course);
         } catch (Course.CodeTooLongException e) {
             System.err.println(e.getMessage());
         } catch (Course.NameTooLongException e) {
             System.err.println(e.getMessage());
         } catch (Model.DuplicateKeyException e) {
+            System.err.println(e.getMessage());
+        } catch (Model.InvalidValueException e) {
             System.err.println(e.getMessage());
         }
 
         // Valid course (unless key exists, so it's probably not actually valid)
         try {
-            System.out.println("Added Course: " + studentist.addCourse("DUMMY", "i am not so dumb", 666));
+            Course course = new Course("DUMMY", "i am not so dumb", 666);
+            course.validate();
+            studentist.add(course);
+            System.out.println("Added Course: " + course);
         } catch (Course.CodeTooLongException e) {
             System.err.println(e.getMessage());
         } catch (Course.NameTooLongException e) {
             System.err.println(e.getMessage());
         } catch (Model.DuplicateKeyException e) {
             System.err.println(e.getMessage());
+        } catch (Model.InvalidValueException e) {
+            System.err.println(e.getMessage());
         }
 
         System.out.println("All finished 'CODE1' students : " + studentist.getStudiedByCourse(studentist.database.getCourse("CODE1")));
-    }
-
-    public static void testDatabase(Database database) {
     }
 }

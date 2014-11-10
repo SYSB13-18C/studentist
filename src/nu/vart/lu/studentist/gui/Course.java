@@ -1,5 +1,7 @@
 package nu.vart.lu.studentist.gui;
 
+import nu.vart.lu.studentist.Model;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,10 +23,14 @@ public class Course extends Page {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            studentist.remove(course);
-            gui.feedback.add("Course " + course.getCode() + " - " + course.getName() + " (" + course.getPoints() + " points) removed.");
-            gui.setComponent(gui.courses);
-            gui.courses.search();
+            try {
+                studentist.remove(course);
+                gui.feedback.add("Course " + course.getCode() + " - " + course.getName() + " (" + course.getPoints() + " points) removed.");
+                gui.setComponent(gui.courses);
+                gui.courses.search();
+            } catch (Model.HasRelationsException e) {
+                gui.feedback.add("Course " + course.getCode() + " - " + course.getName() + " (" + course.getPoints() + " points) has relations (remove them first).");
+            }
         }
     }
 }

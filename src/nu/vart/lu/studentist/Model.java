@@ -17,4 +17,10 @@ public abstract class Model {
             super(message);
         }
     }
+
+    public class HasRelationsException extends Exception {
+        public HasRelationsException(String message) {
+            super(message);
+        }
+    }
 }

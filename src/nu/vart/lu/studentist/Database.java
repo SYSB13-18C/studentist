@@ -35,7 +35,7 @@ public class Database {
      * @throws Model.InvalidValueException When a value is too long (either code(10) or name(20)).
      * TODO return something better (plenty of errors may occur... id exists.. negative points.. ugly name)
      */
-    public boolean addCourse(Course course) throws Model.InvalidValueException, Model.DuplicateKeyException {
+    public void add(Course course) throws Model.InvalidValueException, Model.DuplicateKeyException {
         try {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Course VALUES (?, ?, ?)");
@@ -43,8 +43,6 @@ public class Database {
             statement.setString(2, course.getName());
             statement.setInt(3, course.getPoints());
             statement.executeUpdate();
-            System.out.println("Course added");
-            return true;
         }
         catch (SQLException e) {
             // TODO check documentation for error codes (now we're just assuming)
@@ -56,7 +54,6 @@ public class Database {
                 System.err.println("Unknown addCourse error " + e.getMessage());
                 e.printStackTrace(); }
         }
-        return false;
     }
 
     public boolean add(Student student) throws Model.DuplicateKeyException {
@@ -416,49 +413,62 @@ public class Database {
         return buffer.toArray(studies);
     }
 
-    public boolean remove(Course course) {
+    public void remove(Course course) {
         // TODO catch SQLServerException -- The DELETE statement conflicted with the REFERENCE constraint "STUDIES_FK_COURSE".
         //   or (first) remove all Studies and Studied relation
         try {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
             statement.setString(1, course.getCode());
-            if (statement.executeUpdate() > 0)
-                return true;
+            statement.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Oh noes!");
+            System.err.println("Oh noes! " + e.getMessage());
             e.printStackTrace();
         }
-        return false;
     }
 
-    public boolean remove(Studied studied) {
+    public void remove(Student student) throws Model.HasRelationsException {
+        // TODO remove relations (Studies, Studied)
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
+            statement.setString(1, student.getId());
+            statement.executeUpdate();
+        }
+        catch (SQLException e) {
+            if (e.getErrorCode() == 547) {
+                throw student.new HasRelationsException(e.getMessage());
+            }
+            else {
+                System.err.println("Oh noes! " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void remove(Studied studied) {
         try {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Studied WHERE student=? and course=?");
             statement.setString(1, studied.getStudent().getId());
             statement.setString(2, studied.getCourse().getCode());
-            if (statement.executeUpdate() > 0)
-                return true;
+            statement.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Oh noes!");
+            System.err.println("Oh noes! " + e.getMessage());
             e.printStackTrace();
         }
-        return false;
     }
 
-    public boolean remove(Studies studies) {
+    public void remove(Studies studies) {
         try {
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Studies WHERE student=? AND course=?");
             statement.setString(1, studies.getStudent().getId());
             statement.setString(2, studies.getCourse().getCode());
-            if (statement.executeUpdate() > 0)
-                return true;
+            statement.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Oh noes!");
+            System.err.println("Oh noes! " + e.getMessage());
             e.printStackTrace();
         }
-        return false;
     }
 }
