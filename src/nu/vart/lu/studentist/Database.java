@@ -172,6 +172,26 @@ public class Database {
         return buffer.toArray(courses);
     }
 
+    public Student[] getAvailableStudents(Course course) {
+        List<Student> buffer = new LinkedList<Student>();
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id NOT IN (SELECT student FROM Studied WHERE course=?) AND id NOT IN (SELECT student FROM Studies WHERE course=?)");
+            statement.setString(1, course.getCode());
+            statement.setString(2, course.getCode());
+            ResultSet result = statement.executeQuery();
+            while (result.next()) {
+                buffer.add(new Student(result.getString("id"), result.getString("name")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+
+        Student[] students = new Student[buffer.size()];
+        return buffer.toArray(students);
+    }
+
     public Course getCourse(String code) {
         Course course = null;
         try {
@@ -413,7 +433,44 @@ public class Database {
         return buffer.toArray(studies);
     }
 
-    public void remove(Course course) {
+    public Studied[] getStudied(Course course) {
+        List<Studied> buffer = new LinkedList<Studied>();
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("SELECT student, grade FROM Studied WHERE course=?");
+            statement.setString(1, course.getCode());
+            ResultSet result = statement.executeQuery();
+            while (result.next()) {
+                buffer.add(new Studied(getStudent(result.getString("student")), course, result.getString("grade"))); }
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+
+        Studied[] studied = new Studied[buffer.size()];
+        return buffer.toArray(studied);
+    }
+
+    public Studies[] getStudies(Course course) {
+        List<Studies> buffer = new LinkedList<Studies>();
+        try {
+            Connection connection = DriverManager.getConnection(uri);
+            PreparedStatement statement = connection.prepareStatement("SELECT student, course FROM Studies WHERE course=?");
+            statement.setString(1, course.getCode());
+            ResultSet result = statement.executeQuery();
+            while (result.next()) {
+                buffer.add(new Studies(getStudent(result.getString("student")), course));
+            }
+        } catch (SQLException e) {
+            System.err.println("Oh noes!");
+            e.printStackTrace();
+        }
+
+        Studies[] studies = new Studies[buffer.size()];
+        return buffer.toArray(studies);
+    }
+
+    public void remove(Course course) throws Model.HasRelationsException {
         // TODO catch SQLServerException -- The DELETE statement conflicted with the REFERENCE constraint "STUDIES_FK_COURSE".
         //   or (first) remove all Studies and Studied relation
         try {
@@ -422,6 +479,9 @@ public class Database {
             statement.setString(1, course.getCode());
             statement.executeUpdate();
         } catch (SQLException e) {
+            if (e.getErrorCode() == 547) {
+                throw course.new HasRelationsException(e.getMessage());
+            }
             System.err.println("Oh noes! " + e.getMessage());
             e.printStackTrace();
         }

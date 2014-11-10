@@ -52,6 +52,14 @@ public class Studentist {
         return database.getStudies(student);
     }
 
+    public Studied[] getStudied(Course course) {
+        return database.getStudied(course);
+    }
+
+    public Studies[] getStudies(Course course) {
+        return database.getStudies(course);
+    }
+
     public void remove(Course course) throws Model.HasRelationsException {
         database.remove(course); }
 
@@ -63,6 +71,8 @@ public class Studentist {
     public void remove(Studies studies) { database.remove(studies); }
 
     public Course[] getAvailableCourses(Student student) { return database.getAvailableCourses(student); }
+
+    public Student[] getAvailableStudents(Course course) { return database.getAvailableStudents(course); }
 
     public Studies assign(Student student, Course course) throws Studies.AlreadyStudiesException {
         Studies studies = new Studies(student, course);

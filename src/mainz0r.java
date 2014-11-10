@@ -13,8 +13,7 @@ public class mainz0r {
         System.out.println("\n # Creating GUI");
         GUI gui = new GUI(studentist);
 
-        gui.feedback.add("HI");
-        gui.feedback.add("THERE");
+        gui.feedback.add("Welcome to Studentist!");
         System.out.println("\n # Loaded " + studentist);
 
         // Some testing..
