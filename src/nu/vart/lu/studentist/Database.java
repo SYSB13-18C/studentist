@@ -456,7 +456,8 @@ public class Database {
             System.out.println("timer : " + timer.stop() + " milliseconds");
         }
         catch (SQLException e) {
-            if (e.getErrorCode() == 547) {
+            // TODO more reliable check (getErrorCode gives vendor code, not good)
+            if (e.getErrorCode() == 547 || e.getErrorCode() == 1451) {
                 throw student.new HasRelationsException(e.getMessage());
             }
             else {
