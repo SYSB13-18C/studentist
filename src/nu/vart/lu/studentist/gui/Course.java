@@ -70,8 +70,6 @@ public class Course extends Page {
         protected int uCount = 0;
         protected float uPercent = 0;
 
-        protected DecimalFormat format = new DecimalFormat("#.##");
-
         public Statistics() {
             super(new GridLayout(0, 1));
 
@@ -93,14 +91,14 @@ public class Course extends Page {
                         uCount++;
                 }
 
-                aPercent = Float.valueOf(format.format(aCount / length * 100));
-                bPercent = Float.valueOf(format.format(bCount / length * 100));
-                cPercent = Float.valueOf(format.format(cCount / length * 100));
-                dPercent = Float.valueOf(format.format(dCount / length * 100));
-                ePercent = Float.valueOf(format.format(eCount / length * 100));
-                uPercent = Float.valueOf(format.format(uCount / length * 100));
+                aPercent = format(aCount / length * 100);
+                bPercent = format(bCount / length * 100);
+                cPercent = format(cCount / length * 100);
+                dPercent = format(dCount / length * 100);
+                ePercent = format(eCount / length * 100);
+                uPercent = format(uCount / length * 100);
 
-                throughput = Float.valueOf(format.format((length - uCount) / length * 100));
+                throughput = format((length - uCount) / length * 100);
             }
 
             // display
@@ -113,7 +111,11 @@ public class Course extends Page {
             add(new Value(uPercent + "% U"));
         }
 
-        private class Value extends JLabel {
+        protected float format(float f) {
+            return ((float)(int)(f * 100)) / 100;
+        }
+
+        protected class Value extends JLabel {
             public Value(String string) {
                 super(string);
                 setHorizontalAlignment(JLabel.CENTER);
