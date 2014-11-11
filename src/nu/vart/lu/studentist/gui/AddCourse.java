@@ -42,6 +42,7 @@ public class AddCourse extends Page {
                 int thePoints = Integer.parseInt(points.getText());
                 nu.vart.lu.studentist.models.Course course = new nu.vart.lu.studentist.models.Course(code.getText(), name.getText(), thePoints);
                 studentist.add(course);
+                gui.courses.search();
                 gui.setComponent(new Course(gui, course));
                 gui.feedback.add("Course " + code.getText() + " - " + name.getText() + " (" + thePoints + " points) added.");
             } catch (NumberFormatException e) {
