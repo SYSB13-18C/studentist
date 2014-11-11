@@ -65,6 +65,6 @@ public class Tests {
             System.err.println(e.getMessage());
         }
 
-        System.out.println("All finished 'CODE1' students : " + studentist.getStudiedByCourse(studentist.database.getCourse("CODE1")));
+        System.out.println("All finished 'CODE1' students : " + studentist.getStudied(studentist.database.getCourse("CODE1")));
     }
 }

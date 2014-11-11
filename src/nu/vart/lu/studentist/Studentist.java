@@ -24,13 +24,13 @@ public class Studentist {
     public Studies assign(Student student, Course course, String semester) throws Studies.AlreadyStudiesException, Studies.MaxPointsException {
         Studies studies = new Studies(student, course, semester);
         studies.validate();
-        database.addStudies(studies);
+        database.add(studies);
         return studies;
     }
 
     public Studied completeCourse(Studies studies, String grade) {
         Studied studied = new Studied(studies.getStudent(), studies.getCourse(), grade, studies.getSemester());
-        database.addStudied(studied);
+        database.add(studied);
         database.remove(studies);
         return studied;
     }
@@ -45,10 +45,6 @@ public class Studentist {
 
     public Student[] getStudents() {
         return database.getStudents();
-    }
-
-    public Studied[] getStudiedByCourse(Course course) {
-        return database.getStudiedByCourse(course);
     }
 
     public Studied[] getStudied(Student student) {

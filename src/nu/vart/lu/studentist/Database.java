@@ -79,7 +79,7 @@ public class Database {
         return false;
     }
 
-    public boolean addStudied(Studied studied) {
+    public boolean add(Studied studied) {
         try {
             Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
@@ -99,7 +99,7 @@ public class Database {
         return false;
     }
 
-    public boolean addStudies(Studies studies) throws Studies.AlreadyStudiesException, Studies.MaxPointsException {
+    public boolean add(Studies studies) throws Studies.AlreadyStudiesException, Studies.MaxPointsException {
         if (getPoints(studies.getStudent(), studies.getSemester()) + studies.getCourse().getPoints() > 45)
             throw studies.new MaxPointsException("Oh no!");
 
@@ -127,40 +127,6 @@ public class Database {
             e.printStackTrace();
         }
 
-        return false;
-    }
-
-    public boolean deleteCourse(String code){
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
-            statement.setString(1, code);
-            statement.executeUpdate();
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-            return true;
-        }
-        catch (SQLException e) {
-            // System.err.println("Kunde inte hitta namn på student " + e.getMessage());
-            // e.printStackTrace();
-        }
-        return false;
-    }
-
-    public boolean deleteStudent(String id){
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
-            statement.setString(1, id);
-            statement.executeUpdate();
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-            return true;
-        }
-        catch (SQLException e) {
-            //System.err.println("SQL fel. Kunde inte hitta namn på student " + e.getMessage());
-            //e.printStackTrace();
-        }
         return false;
     }
 
@@ -227,26 +193,34 @@ public class Database {
         return course;
     }
 
-    // TODO return array
-    public List<Course> getCourses() {
-        List<Course> courses = new ArrayList<Course>();
+    /**
+     * Get a set of courses where query matches code or name.
+     *
+     * @query The query (searches code and name).
+     * @return The Student set.
+     */
+    public Course[] getCourses(String query) {
+        ArrayList<Course> buffer = new ArrayList<Course>();
         try {
             Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM course");
+            PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code LIKE ? OR name LIKE ?");
+            statement.setString(1, "%" + query + "%");
+            statement.setString(2, "%" + query + "%");
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
-                courses.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
+                buffer.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
             }
             System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
-            System.err.println("Kunde inte hitta namn på student " + e.getMessage());
             e.printStackTrace();
         }
 
-        return courses;
+        Course[] courses = new Course[buffer.size()];
+        return buffer.toArray(courses);
     }
+
 
     public int getPoints(Student student, String semester) {
         try {
@@ -293,32 +267,6 @@ public class Database {
             e.printStackTrace();
             return null;
         }
-    }
-
-    public Studied[] getStudiedByCourse(Course course) {
-        List<Studied> buffer = new LinkedList<Studied>();
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, Student.name AS studentName, course, Course.name AS courseName, points, semester, grade FROM Studied INNER JOIN Student ON Student.id = Studied.student INNER JOIN Course ON Studied.course = Course.code WHERE course = ?");
-            statement.setString(1, course.getCode());
-            ResultSet result = statement.executeQuery();
-
-            while (result.next()) {
-                buffer.add(new Studied(
-                    new Student(result.getString("student"), result.getString("studentName")),
-                    new Course(result.getString("course"), result.getString("courseName"), result.getInt("points")),
-                    result.getString("grade"),
-                    result.getString("semester")));
-            }
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-        } catch (SQLException e) {
-            System.err.println("Kunde inte hitta namn på student " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        Studied[] studied = new Studied[buffer.size()];
-        return buffer.toArray(studied);
     }
 
     /**
@@ -374,45 +322,13 @@ public class Database {
         return buffer.toArray(students);
     }
 
-    /**
-     * Get a set of courses where query matches code or name.
-     *
-     * @query The query (searches code and name).
-     * @return The Student set.
-     */
-    public Course[] getCourses(String query) {
-        ArrayList<Course> buffer = new ArrayList<Course>();
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code LIKE ? OR name LIKE ?");
-            statement.setString(1, "%" + query + "%");
-            statement.setString(2, "%" + query + "%");
-            ResultSet result = statement.executeQuery();
-
-            while (result.next()) {
-                buffer.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
-            }
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        Course[] courses = new Course[buffer.size()];
-        return buffer.toArray(courses);
-    }
-
-    public Student[] getStudentsByCourse(Course course) {
-        return getStudentsByCourse(course.getCode());
-    }
-
-    public Student[] getStudentsByCourse(String course) {
+    public Student[] getStudents(Course course) {
         List<Student> buffer = new ArrayList<Student>();
         try {
             Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student.id, student.name FROM Student LEFT JOIN studies ON student.id=studies.student WHERE course=? ");
-            statement.setString(1, course);
+            statement.setString(1, course.getCode());
             ResultSet result = statement.executeQuery();
 
             while (result.next()) {
