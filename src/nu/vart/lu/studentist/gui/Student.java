@@ -85,6 +85,7 @@ public class Student extends Page {
                 public void actionPerformed(ActionEvent actionEvent) {
                     studentist.remove(studied);
                     gui.setComponent(new Student(gui, student));
+                    gui.feedback.add("Student " + studied.getStudent().getId() + " removed from course " + studied.getCourse().getCode() + " (studied)");
                 }
             }
         }
@@ -128,6 +129,7 @@ public class Student extends Page {
                     if (grade != "Incomplete") {
                         studentist.completeCourse(studies, grade);
                         gui.setComponent(new Student(gui, student));
+                        gui.feedback.add("Student " + studies.getStudent().getId() + " graded " + grade + " on course " + studies.getCourse().getCode());
                     }
                 }
             }
@@ -142,6 +144,7 @@ public class Student extends Page {
                 public void actionPerformed(ActionEvent actionEvent) {
                     studentist.remove(studies);
                     gui.setComponent(new Student(gui, student));
+                    gui.feedback.add("Student " + student.getId() + " removed from course " + studies.getCourse().getCode() + " (studies)");
                 }
             }
         }
@@ -173,8 +176,10 @@ public class Student extends Page {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        studentist.assign(student, (Course)getSelectedItem(), (String)semesterChooser.getSelectedItem());
+                        Course course = (Course)getSelectedItem();
+                        studentist.assign(student, course, (String)semesterChooser.getSelectedItem());
                         gui.setComponent(new Student(gui, student));
+                        gui.feedback.add("Student " + student.getId() + " assigned to " + course.getCode());
                     }
                     catch (Studies.AlreadyStudiesException e1) {
                         gui.feedback.add(e1.getMessage());

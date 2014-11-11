@@ -149,12 +149,14 @@ public class Course extends Page {
                 public Remove() {
                     super("X");
                     addActionListener(this);
+                    setPreferredSize(new Dimension(100, 50));
                 }
 
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
                     studentist.remove(studied);
                     gui.setComponent(new Course(gui, course));
+                    gui.feedback.add("Student " + studied.getStudent().getId() + " removed from course " + course.getCode());
                 }
             }
         }
@@ -198,6 +200,7 @@ public class Course extends Page {
                     if (grade != "Incomplete") {
                         studentist.completeCourse(studies, grade);
                         gui.setComponent(new Course(gui, course));
+                        gui.feedback.add("Student " + studies.getStudent().getId() + " graded " + grade + " on course " + course.getCode());
                     }
                 }
             }
@@ -212,6 +215,7 @@ public class Course extends Page {
                 public void actionPerformed(ActionEvent actionEvent) {
                     studentist.remove(studies);
                     gui.setComponent(new Course(gui, course));
+                    gui.feedback.add("Student " + studies.getStudent().getId() + " unassigned from course " + course.getCode());
                 }
             }
         }
@@ -243,8 +247,10 @@ public class Course extends Page {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        studentist.assign((nu.vart.lu.studentist.models.Student)getSelectedItem(), course, (String)semesterChooser.getSelectedItem());
+                        nu.vart.lu.studentist.models.Student student = (nu.vart.lu.studentist.models.Student)getSelectedItem();
+                        studentist.assign(student, course, (String)semesterChooser.getSelectedItem());
                         gui.setComponent(new Course(gui, course));
+                        gui.feedback.add("Student " + student.getId() + " assigned to course " + course.getCode());
                     }
                     catch (Studies.AlreadyStudiesException e1) {
                         gui.feedback.add(e1.getMessage());
