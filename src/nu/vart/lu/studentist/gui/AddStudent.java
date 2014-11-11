@@ -38,6 +38,7 @@ public class AddStudent extends Page {
                 nu.vart.lu.studentist.models.Student student = new nu.vart.lu.studentist.models.Student(id.getText(), name.getText());
                 student.validate();
                 studentist.add(student);
+                gui.students.search();
                 gui.setComponent(new Student(gui, student));
                 gui.feedback.add("Student " + id.getText() + " - " + name.getText() + " added.");
             } catch (Model.DuplicateKeyException e) {
