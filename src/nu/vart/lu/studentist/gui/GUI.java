@@ -130,7 +130,9 @@ public class GUI extends JFrame {
             JLabel label = new JLabel(message);
             label.setHorizontalAlignment(SwingConstants.CENTER);
             messages.add(label);
-            revalidate();
+            messages.invalidate();
+            messages.validate();
+            messages.repaint();
         }
 
         private class Clear extends JButton implements ActionListener {
@@ -142,7 +144,9 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 messages.removeAll();
-                revalidate();
+                messages.invalidate();
+                messages.validate();
+                messages.repaint();
             }
         }
     }
@@ -154,7 +158,7 @@ public class GUI extends JFrame {
 
         public Title(String text, int size) {
             super(text);
-            setFont(new Font("MonoType Corsiva", Font.PLAIN, size));
+            setFont(new Font("Verdana", Font.PLAIN, size));
             setHorizontalAlignment(JLabel.CENTER);
         }
     }
