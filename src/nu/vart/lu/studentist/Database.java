@@ -36,12 +36,14 @@ public class Database {
      */
     public void add(Course course) throws Model.InvalidValueException, Model.DuplicateKeyException {
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Course VALUES (?, ?, ?)");
             statement.setString(1, course.getCode());
             statement.setString(2, course.getName());
             statement.setInt(3, course.getPoints());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         }
         catch (SQLException e) {
             // TODO check documentation for error codes (now we're just assuming)
@@ -58,11 +60,13 @@ public class Database {
     public boolean add(Student student) throws Model.DuplicateKeyException {
         // TODO hantera fel när ID redan finns, con broken, ?
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Student (id, name) VALUES (?, ?)");
             statement.setString(1, student.getId());
             statement.setString(2, student.getName());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return true;
         }
         catch (SQLServerException e) { // ID already exists (perhaps something else too..)
@@ -77,6 +81,7 @@ public class Database {
 
     public boolean addStudied(Studied studied) {
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Studied (student, course, grade, semester) VALUES (?, ?, ?, ?)");
             statement.setString(1, studied.getStudent().getId());
@@ -84,7 +89,7 @@ public class Database {
             statement.setString(3, studied.getGrade());
             statement.setString(4, studied.getSemester());
             statement.executeUpdate();
-            System.out.println("Student tillagd till studied");
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return true;
         }
         catch (SQLException e) {
@@ -99,12 +104,14 @@ public class Database {
             throw studies.new MaxPointsException("Oh no!");
 
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("INSERT INTO Studies (student, course, semester) VALUES (?, ?, ?)");
             statement.setString(1, studies.getStudent().getId());
             statement.setString(2, studies.getCourse().getCode());
             statement.setString(3, studies.getSemester());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return true;
         }
         catch (SQLServerException e) {
@@ -125,11 +132,12 @@ public class Database {
 
     public boolean deleteCourse(String code){
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
             statement.setString(1, code);
             statement.executeUpdate();
-            System.out.println("Course deleted");
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return true;
         }
         catch (SQLException e) {
@@ -141,11 +149,12 @@ public class Database {
 
     public boolean deleteStudent(String id){
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
             statement.setString(1, id);
             statement.executeUpdate();
-            System.out.println("Student borttagen");
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return true;
         }
         catch (SQLException e) {
@@ -158,6 +167,7 @@ public class Database {
     public Course[] getAvailableCourses(Student student) {
         List<Course> buffer = new LinkedList<Course>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             //PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code NOT IN (SELECT course FROM Studies WHERE Studies.student=? OR Studied.student=?)");
             PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code NOT IN (SELECT course FROM Studied WHERE student=?) AND code NOT IN (SELECT course FROM Studies WHERE student=?)");
@@ -167,6 +177,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -179,6 +190,7 @@ public class Database {
     public Student[] getAvailableStudents(Course course) {
         List<Student> buffer = new LinkedList<Student>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id NOT IN (SELECT student FROM Studied WHERE course=?) AND id NOT IN (SELECT student FROM Studies WHERE course=?)");
             statement.setString(1, course.getCode());
@@ -187,6 +199,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Student(result.getString("id"), result.getString("name")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -199,6 +212,7 @@ public class Database {
     public Course getCourse(String code) {
         Course course = null;
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code = ?");
             statement.setString(1, code);
@@ -206,6 +220,7 @@ public class Database {
             if (result.next()) {
                 course = new Course(result.getString("code"), result.getString("name"), result.getInt("points"));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Database.getCourse() error : " + e.getMessage());
         }
@@ -216,6 +231,7 @@ public class Database {
     public List<Course> getCourses() {
         List<Course> courses = new ArrayList<Course>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM course");
             ResultSet result = statement.executeQuery();
@@ -223,6 +239,7 @@ public class Database {
             while (result.next()) {
                 courses.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
             e.printStackTrace();
@@ -233,12 +250,14 @@ public class Database {
 
     public int getPoints(Student student, String semester) {
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT SUM(points) AS points FROM Studies INNER JOIN Course ON Studies.course = Course.code WHERE Studies.student = ? AND Studies.semester = ?");
             statement.setString(1, student.getId());
             statement.setString(2, semester);
             ResultSet result = statement.executeQuery();
             result.next();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return result.getInt("points");
         } catch (SQLException e) {
             System.err.println("Uh oh! " + e.getMessage());
@@ -255,6 +274,7 @@ public class Database {
      */
     public Student getStudent(String id) {
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id = ?");
             statement.setString(1, id);
@@ -265,6 +285,7 @@ public class Database {
             Student student = new Student(result.getString("id"), result.getString("name"));
 
             result.close();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
             return student;
         }
         catch (SQLException e) {
@@ -277,6 +298,7 @@ public class Database {
     public Studied[] getStudiedByCourse(Course course) {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, Student.name AS studentName, course, Course.name AS courseName, points, semester, grade FROM Studied INNER JOIN Student ON Student.id = Studied.student INNER JOIN Course ON Studied.course = Course.code WHERE course = ?");
             statement.setString(1, course.getCode());
@@ -289,6 +311,7 @@ public class Database {
                     result.getString("grade"),
                     result.getString("semester")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
             e.printStackTrace();
@@ -296,25 +319,6 @@ public class Database {
 
         Studied[] studied = new Studied[buffer.size()];
         return buffer.toArray(studied);
-    }
-
-    public Studied[] getStudiedAtCourse(String courseCode) {
-        List<Studied> studentOnCourse = new ArrayList<Studied>();
-        try {
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade FROM studied WHERE course = ?");
-            statement.setString(1, courseCode);
-            ResultSet result = statement.executeQuery();
-
-            while (result.next()) {
-                //studentOnCourse.add(new Studied(new Student(result.getString(1), result.getString(2), result.getString(3)));
-            }
-        } catch (SQLException e) {
-            System.err.println("Kunde inte hitta namn på student " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     /**
@@ -325,6 +329,7 @@ public class Database {
     public Student[] getStudents() {
         ArrayList<Student> buffer = new ArrayList<Student>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student");
             ResultSet result = statement.executeQuery();
@@ -332,6 +337,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Student(result.getString("id"), result.getString("name")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -349,6 +355,7 @@ public class Database {
     public Student[] getStudents(String query) {
         ArrayList<Student> buffer = new ArrayList<Student>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT id, name FROM Student WHERE id LIKE ? OR name LIKE ?");
             statement.setString(1, "%" + query + "%");
@@ -358,6 +365,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Student(result.getString("id"), result.getString("name")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -375,6 +383,7 @@ public class Database {
     public Course[] getCourses(String query) {
         ArrayList<Course> buffer = new ArrayList<Course>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM Course WHERE code LIKE ? OR name LIKE ?");
             statement.setString(1, "%" + query + "%");
@@ -384,6 +393,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -399,6 +409,7 @@ public class Database {
     public Student[] getStudentsByCourse(String course) {
         List<Student> buffer = new ArrayList<Student>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student.id, student.name FROM Student LEFT JOIN studies ON student.id=studies.student WHERE course=? ");
             statement.setString(1, course);
@@ -407,6 +418,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Student(result.getString("student.id"), result.getString("student.name")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Kunde inte hitta namn på student " + e.getMessage());
             e.printStackTrace();
@@ -419,12 +431,14 @@ public class Database {
     public Studied[] getStudied(Student student) {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, course, grade, semester FROM Studied WHERE student=?");
             statement.setString(1, student.getId());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
                 buffer.add(new Studied(student, getCourse(result.getString("course")), result.getString("grade"), result.getString("semester"))); }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -437,6 +451,7 @@ public class Database {
     public Studies[] getStudies(Student student) {
         List<Studies> buffer = new LinkedList<Studies>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, course, semester FROM Studies WHERE student=?");
             statement.setString(1, student.getId());
@@ -444,6 +459,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Studies(student, getCourse(result.getString("course")), result.getString("semester")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -456,12 +472,14 @@ public class Database {
     public Studied[] getStudied(Course course) {
         List<Studied> buffer = new LinkedList<Studied>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, grade, semester FROM Studied WHERE course=?");
             statement.setString(1, course.getCode());
             ResultSet result = statement.executeQuery();
             while (result.next()) {
                 buffer.add(new Studied(getStudent(result.getString("student")), course, result.getString("grade"), result.getString("semester"))); }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -474,6 +492,7 @@ public class Database {
     public Studies[] getStudies(Course course) {
         List<Studies> buffer = new LinkedList<Studies>();
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("SELECT student, course, semester FROM Studies WHERE course=?");
             statement.setString(1, course.getCode());
@@ -481,6 +500,7 @@ public class Database {
             while (result.next()) {
                 buffer.add(new Studies(getStudent(result.getString("student")), course, result.getString("semester")));
             }
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes!");
             e.printStackTrace();
@@ -494,10 +514,12 @@ public class Database {
         // TODO catch SQLServerException -- The DELETE statement conflicted with the REFERENCE constraint "STUDIES_FK_COURSE".
         //   or (first) remove all Studies and Studied relation
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
             statement.setString(1, course.getCode());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             if (e.getErrorCode() == 547) {
                 throw course.new HasRelationsException(e.getMessage());
@@ -510,10 +532,12 @@ public class Database {
     public void remove(Student student) throws Model.HasRelationsException {
         // TODO remove relations (Studies, Studied)
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
             statement.setString(1, student.getId());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         }
         catch (SQLException e) {
             if (e.getErrorCode() == 547) {
@@ -528,11 +552,13 @@ public class Database {
 
     public void remove(Studied studied) {
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Studied WHERE student=? and course=?");
             statement.setString(1, studied.getStudent().getId());
             statement.setString(2, studied.getCourse().getCode());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes! " + e.getMessage());
             e.printStackTrace();
@@ -541,14 +567,32 @@ public class Database {
 
     public void remove(Studies studies) {
         try {
+            Timer timer = new Timer();
             Connection connection = DriverManager.getConnection(uri);
             PreparedStatement statement = connection.prepareStatement("DELETE FROM Studies WHERE student=? AND course=?");
             statement.setString(1, studies.getStudent().getId());
             statement.setString(2, studies.getCourse().getCode());
             statement.executeUpdate();
+            System.out.println("timer : " + timer.stop() + " milliseconds");
         } catch (SQLException e) {
             System.err.println("Oh noes! " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    protected class Timer {
+        protected long start;
+        protected long stop;
+        protected long time;
+
+        public Timer() {
+            start = System.currentTimeMillis();
+        }
+
+        public long stop() {
+            stop = System.currentTimeMillis();
+            time = stop - start;
+            return time;
         }
     }
 }
