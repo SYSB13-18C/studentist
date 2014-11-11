@@ -221,7 +221,6 @@ public class Database {
         return buffer.toArray(courses);
     }
 
-
     public int getPoints(Student student, String semester) {
         try {
             Timer timer = new Timer();
