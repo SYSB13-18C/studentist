@@ -1,0 +1,3 @@
+- Course points is integer - should be float to support e.g. 7,5 points.
+- Student ID validation only validates at least one character - should probably be more strict.
+- Database is not closed after each request.
