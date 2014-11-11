@@ -130,40 +130,6 @@ public class Database {
         return false;
     }
 
-    public boolean deleteCourse(String code){
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("DELETE FROM Course WHERE code=?");
-            statement.setString(1, code);
-            statement.executeUpdate();
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-            return true;
-        }
-        catch (SQLException e) {
-            // System.err.println("Kunde inte hitta namn på student " + e.getMessage());
-            // e.printStackTrace();
-        }
-        return false;
-    }
-
-    public boolean deleteStudent(String id){
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("DELETE FROM Student WHERE id=?");
-            statement.setString(1, id);
-            statement.executeUpdate();
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-            return true;
-        }
-        catch (SQLException e) {
-            //System.err.println("SQL fel. Kunde inte hitta namn på student " + e.getMessage());
-            //e.printStackTrace();
-        }
-        return false;
-    }
-
     public Course[] getAvailableCourses(Student student) {
         List<Course> buffer = new LinkedList<Course>();
         try {
@@ -225,27 +191,6 @@ public class Database {
             System.err.println("Database.getCourse() error : " + e.getMessage());
         }
         return course;
-    }
-
-    // TODO return array
-    public List<Course> getCourses() {
-        List<Course> courses = new ArrayList<Course>();
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT code, name, points FROM course");
-            ResultSet result = statement.executeQuery();
-
-            while (result.next()) {
-                courses.add(new Course(result.getString("code"), result.getString("name"), result.getInt("points")));
-            }
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-        } catch (SQLException e) {
-            System.err.println("Kunde inte hitta namn på student " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return courses;
     }
 
     public int getPoints(Student student, String semester) {
@@ -400,32 +345,6 @@ public class Database {
 
         Course[] courses = new Course[buffer.size()];
         return buffer.toArray(courses);
-    }
-
-    public Student[] getStudentsByCourse(Course course) {
-        return getStudentsByCourse(course.getCode());
-    }
-
-    public Student[] getStudentsByCourse(String course) {
-        List<Student> buffer = new ArrayList<Student>();
-        try {
-            Timer timer = new Timer();
-            Connection connection = DriverManager.getConnection(uri);
-            PreparedStatement statement = connection.prepareStatement("SELECT student.id, student.name FROM Student LEFT JOIN studies ON student.id=studies.student WHERE course=? ");
-            statement.setString(1, course);
-            ResultSet result = statement.executeQuery();
-
-            while (result.next()) {
-                buffer.add(new Student(result.getString("student.id"), result.getString("student.name")));
-            }
-            System.out.println("timer : " + timer.stop() + " milliseconds");
-        } catch (SQLException e) {
-            System.err.println("Kunde inte hitta namn på student " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        Student[] students = new Student[buffer.size()];
-        return buffer.toArray(students);
     }
 
     public Studied[] getStudied(Student student) {
