@@ -33,7 +33,7 @@ public class Courses extends Page {
 
     protected class Add extends JButton implements ActionListener {
         public Add() {
-            super("+");
+            super("+ New Course");
             addActionListener(this);
         }
 
@@ -72,7 +72,7 @@ public class Courses extends Page {
         public void set(nu.vart.lu.studentist.models.Course[] courses) {
             this.courses = courses;
             removeAll();
-            add(new GUI.Title("Found " + courses.length + " course(s)."));
+            add(new GUI.Title("Found " + courses.length + " course(s).", 20));
             for (int i = 0; i < courses.length; i++)
                 add(new Record(courses[i]));
             revalidate();
