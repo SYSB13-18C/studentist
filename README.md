@@ -1,8 +1,11 @@
+_This software is merely written for educational purposes. It is not meant to be used. It is incomplete._
+
 # Studentist
 An application to manage Students and Courses, as well as their relations Studied and Studies.
 
 ## Prerequisites
-Some SQL server.
+* JRE 7
+* Some SQL server.
 
 ## Install
 * git clone https://www.github.com/SYSB13-18C/studentist.git
@@ -14,7 +17,7 @@ Some SQL server.
 * http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx
 
 ## Authors
-Allelex
-Filip Schött
-Hannes Landstedt a.k.a. zarac
-Luddlol
+* Allelex
+* Filip Schött
+* Hannes Landstedt a.k.a. zarac
+* Luddlol
