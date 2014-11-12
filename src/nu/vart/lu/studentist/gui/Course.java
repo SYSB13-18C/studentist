@@ -5,6 +5,8 @@ import nu.vart.lu.studentist.models.Studied;
 import nu.vart.lu.studentist.models.Studies;
 
 import javax.swing.*;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,28 +19,45 @@ public class Course extends Page {
     protected Statistics statistics;
     protected StudiedTable studiedTable;
     protected StudiesTable studiesTable;
+    protected static GridBagLayout layout = new GridBagLayout() { };
 
     public Course(GUI gui, nu.vart.lu.studentist.models.Course course) {
         super(gui);
         this.course = course;
-        setLayout(new BorderLayout());
-        add(new GUI.Title(course.getCode() + " : " + course.getName() + " (" + course.getPoints() + " points)"), BorderLayout.NORTH);
-        JPanel sections = new JPanel(new GridLayout(0, 1));
         studies = studentist.getStudies(course);
         studied = studentist.getStudied(course);
-        statistics = new Statistics();
+
+        setLayout(new BorderLayout());
+
+        add(new GUI.Title(course.getName()), BorderLayout.NORTH);
+
+        JPanel sections = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        c.insets = new Insets(15, 15, 15, 15);
+
+        JPanel meta = new JPanel(new GridLayout(0, 1));
+        meta.add(new JLabel("code    " + course.getCode()));
+        meta.add(new JLabel("points  " + course.getPoints()));
+        sections.add(meta, c);
+
         studiesTable = new StudiesTable();
+        sections.add(studiesTable, c);
+
         studiedTable = new StudiedTable();
-        sections.add(studiesTable);
-        sections.add(studiedTable);
-        sections.add(statistics);
-        sections.add(new Remove());
+        sections.add(studiedTable, c);
+
+        statistics = new Statistics();
+        sections.add(statistics, c);
+
+        sections.add(new Remove(), c);
+
         add(sections, BorderLayout.CENTER);
     }
 
     protected class Remove extends JButton implements ActionListener {
         public Remove() {
-            super("Remove");
+            super("Remove Course");
             addActionListener(this);
         }
 
@@ -70,8 +89,11 @@ public class Course extends Page {
         protected int uCount = 0;
         protected float uPercent = 0;
 
+        protected Object[][] data;
+        protected String[] headers = new String[] { "", "Count", "Percent" };
+
         public Statistics() {
-            super(new GridLayout(0, 1));
+            super(new BorderLayout());
 
             // calculate
             if (studied.length > 0) {
@@ -102,31 +124,82 @@ public class Course extends Page {
             }
 
             // display
-            add(new Value(throughput + "% throughput"));
-            add(new Value(aPercent + "% A"));
-            add(new Value(bPercent + "% B"));
-            add(new Value(cPercent + "% C"));
-            add(new Value(dPercent + "% D"));
-            add(new Value(ePercent + "% E"));
-            add(new Value(uPercent + "% U"));
+            add(new GUI.SubTitle("Statistics"), BorderLayout.NORTH);
+
+            data = new Object[][] {
+                    { "Throughput", studied.length - uCount, throughput },
+                    { "A", aCount, aPercent },
+                    { "B", bCount, bPercent },
+                    { "C", cCount, cPercent },
+                    { "D", dCount, dPercent },
+                    { "E", eCount, ePercent },
+                    { "U", uCount, uPercent } };
+
+            JTable table = new JTable(data, headers);
+            table.setModel(new TableModel() {
+                @Override
+                public int getRowCount() {
+                    return data.length;
+                }
+
+                @Override
+                public int getColumnCount() {
+                    return headers.length;
+                }
+
+                @Override
+                public String getColumnName(int i) {
+                    return headers[i];
+                }
+
+                @Override
+                public Class<?> getColumnClass(int i) {
+                    return String.class;
+                }
+
+                @Override
+                public boolean isCellEditable(int i, int i2) {
+                    return false;
+                }
+
+                @Override
+                public Object getValueAt(int i, int i2) {
+                    return data[i][i2];
+                }
+
+                @Override
+                public void setValueAt(Object o, int i, int i2) {
+                    data[i][i2] = o;
+                }
+
+                @Override
+                public void addTableModelListener(TableModelListener tableModelListener) {
+
+                }
+
+                @Override
+                public void removeTableModelListener(TableModelListener tableModelListener) {
+
+                }
+            } );
+
+            JPanel container = new JPanel(new BorderLayout());
+            container.add(table.getTableHeader(), BorderLayout.NORTH);
+            container.add(table, BorderLayout.CENTER);
+            add(container, BorderLayout.CENTER);
         }
 
         protected float format(float f) {
             return ((float)(int)(f * 100)) / 100;
-        }
-
-        protected class Value extends JLabel {
-            public Value(String string) {
-                super(string);
-                setHorizontalAlignment(JLabel.CENTER);
-            }
         }
     }
 
     protected class StudiedTable extends JPanel {
         public StudiedTable() {
             super(new GridLayout(0, 1));
-            add(new GUI.Title(studied.length + " previous student(s).", 24));
+
+            add(new GUI.SubTitle(studied.length + " previous Student(s)"));
+
             for (int i = 0; i < studied.length; i++)
                 add(new Record(studied[i]));
         }
@@ -137,6 +210,7 @@ public class Course extends Page {
             public Record(Studied studied) {
                 super(new GridLayout(1, 0));
                 this.studied = studied;
+
                 add(new JLabel(studied.getStudent().getId()));
                 add(new JLabel(studied.getStudent().getName()));
                 add(new JLabel(studied.getGrade()));
@@ -149,7 +223,6 @@ public class Course extends Page {
                 public Remove() {
                     super("X");
                     addActionListener(this);
-                    setPreferredSize(new Dimension(100, 50));
                 }
 
                 @Override
@@ -165,7 +238,7 @@ public class Course extends Page {
     protected class StudiesTable extends JPanel {
         public StudiesTable() {
             super(new GridLayout(0, 1));
-            add(new GUI.Title(studies.length + " current student(s).", 24));
+            add(new GUI.SubTitle(studies.length + " current Student(s)"));
             for (int i = 0; i < studies.length; i++)
                 add(new Record(studies[i]));
             add(new Assigner());
